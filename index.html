@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Калькулятор Выручки</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: #f8f9fa;
+        }
+
+        .summary-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .summary-card h3 {
+            color: #667eea;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .summary-card .value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .settings-section {
+            padding: 30px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .settings-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .rate-input {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .rate-input input {
+            padding: 12px 20px;
+            font-size: 1.2em;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            width: 150px;
+            outline: none;
+        }
+
+        .rate-input input:focus {
+            border-color: #764ba2;
+        }
+
+        .calendar-section {
+            padding: 30px;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .calendar-header button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background 0.3s;
+        }
+
+        .calendar-header button:hover {
+            background: #764ba2;
+        }
+
+        .calendar-header h2 {
+            color: #333;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+
+        .calendar-day-header {
+            text-align: center;
+            padding: 10px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            padding: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            background: white;
+        }
+
+        .calendar-day:hover {
+            border-color: #667eea;
+            transform: scale(1.05);
+        }
+
+        .calendar-day.has-data {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+        }
+
+        .calendar-day.other-month {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .calendar-day.today {
+            border-color: #ff6b6b;
+            border-width: 3px;
+        }
+
+        .day-number {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .day-info {
+            font-size: 0.7em;
+            margin-top: 3px;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .modal-close:hover {
+            color: #333;
+        }
+
+        .modal h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1em;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            border-color: #667eea;
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.3s;
+        }
+
+        .btn-save:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-delete {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .period-selector {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .period-selector select {
+            padding: 10px 15px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            font-size: 1em;
+            outline: none;
+            cursor: pointer;
+        }
+
+        @media (max-width: 600px) {
+            header h1 {
+                font-size: 1.8em;
+            }
+
+            .summary-card .value {
+                font-size: 1.5em;
+            }
+
+            .calendar-day {
+                aspect-ratio: 1;
+                padding: 3px;
+            }
+
+            .day-number {
+                font-size: 0.9em;
+            }
+
+            .day-info {
+                font-size: 0.6em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>💰 Калькулятор Выручки</h1>
+            <p>Отслеживайте свои доходы по дням</p>
+        </header>
+
+        <div class="summary">
+            <div class="summary-card">
+                <h3>Почасовая ставка</h3>
+                <div class="value" id="hourlyRateDisplay">0 ₽</div>
+            </div>
+            <div class="summary-card">
+                <h3>Всего часов</h3>
+                <div class="value" id="totalHours">0</div>
+            </div>
+            <div class="summary-card">
+                <h3>Выручка за работу</h3>
+                <div class="value" id="workEarnings">0 ₽</div>
+            </div>
+            <div class="summary-card">
+                <h3>Чаевые</h3>
+                <div class="value" id="totalTips">0 ₽</div>
+            </div>
+            <div class="summary-card">
+                <h3>Общая выручка</h3>
+                <div class="value" id="totalEarnings">0 ₽</div>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <h2>⚙️ Настройки</h2>
+            <div class="rate-input">
+                <label for="hourlyRate">Почасовая ставка (₽):</label>
+                <input type="number" id="hourlyRate" min="0" step="1" value="0" placeholder="0">
+            </div>
+        </div>
+
+        <div class="calendar-section">
+            <div class="period-selector">
+                <select id="startMonth"></select>
+                <select id="startYear"></select>
+                <span>—</span>
+                <select id="endMonth"></select>
+                <select id="endYear"></select>
+                <button onclick="updatePeriod()">Применить период</button>
+            </div>
+
+            <div class="calendar-header">
+                <button onclick="previousMonth()">← Пред.</button>
+                <h2 id="currentMonthYear"></h2>
+                <button onclick="nextMonth()">След. →</button>
+            </div>
+
+            <div class="calendar-grid" id="calendarGrid">
+                <!-- Calendar will be generated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Day Modal -->
+    <div class="modal" id="dayModal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal()">&times;</span>
+            <h2 id="modalDate"></h2>
+            <div class="form-group">
+                <label for="workHours">Рабочие часы:</label>
+                <input type="number" id="workHours" min="0" step="0.5" placeholder="0">
+            </div>
+            <div class="form-group">
+                <label for="tips">Чаевые (₽):</label>
+                <input type="number" id="tips" min="0" step="1" placeholder="0">
+            </div>
+            <button class="btn-save" onclick="saveDayData()">Сохранить</button>
+            <button class="btn-delete" onclick="deleteDayData()">Удалить данные</button>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let currentDate = new Date();
+        let selectedDate = null;
+        let data = JSON.parse(localStorage.getItem('earningsData')) || {};
+        let hourlyRate = parseFloat(localStorage.getItem('hourlyRate')) || 0;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeSelectors();
+            updateHourlyRateDisplay();
+            renderCalendar();
+            calculateTotals();
+        });
+
+        function initializeSelectors() {
+            const now = new Date();
+            
+            // Populate month and year selectors
+            const months = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 
+                          'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+            const currentYear = new Date().getFullYear();
+            
+            ['startMonth', 'endMonth'].forEach(id => {
+                const select = document.getElementById(id);
+                select.innerHTML = months.map((m, i) => 
+                    `<option value="${i}">${m}</option>`
+                ).join('');
+            });
+            
+            ['startYear', 'endYear'].forEach(id => {
+                const select = document.getElementById(id);
+                let options = '';
+                for (let y = currentYear - 2; y <= currentYear + 2; y++) {
+                    options += `<option value="${y}" ${y === currentYear ? 'selected' : ''}>${y}</option>`;
+                }
+                select.innerHTML = options;
+            });
+            
+            document.getElementById('startMonth').value = now.getMonth();
+            document.getElementById('startYear').value = now.getFullYear();
+            document.getElementById('endMonth').value = now.getMonth();
+            document.getElementById('endYear').value = now.getFullYear();
+            
+            document.getElementById('hourlyRate').value = hourlyRate;
+            document.getElementById('hourlyRate').addEventListener('change', (e) => {
+                hourlyRate = parseFloat(e.target.value) || 0;
+                localStorage.setItem('hourlyRate', hourlyRate);
+                updateHourlyRateDisplay();
+                calculateTotals();
+            });
+        }
+
+        function updateHourlyRateDisplay() {
+            document.getElementById('hourlyRateDisplay').textContent = `${hourlyRate.toLocaleString()} ₽`;
+        }
+
+        function getPeriod() {
+            const startMonth = parseInt(document.getElementById('startMonth').value);
+            const startYear = parseInt(document.getElementById('startYear').value);
+            const endMonth = parseInt(document.getElementById('endMonth').value);
+            const endYear = parseInt(document.getElementById('endYear').value);
+            
+            return {
+                start: new Date(startYear, startMonth, 1),
+                end: new Date(endYear, endMonth + 1, 0)
+            };
+        }
+
+        function updatePeriod() {
+            calculateTotals();
+        }
+
+        function renderCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            const monthYear = document.getElementById('currentMonthYear');
+            
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            
+            const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 
+                              'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+            monthYear.textContent = `${monthNames[month]} ${year}`;
+
+            // Day headers
+            const dayHeaders = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+            grid.innerHTML = dayHeaders.map(d => 
+                `<div class="calendar-day-header">${d}</div>`
+            ).join('');
+
+            // Get first day of month and total days
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            
+            // Adjust for Monday start (0 = Sunday in JS, we want Monday = 0)
+            let startingDay = firstDay.getDay() - 1;
+            if (startingDay === -1) startingDay = 6;
+
+            const totalDays = lastDay.getDate();
+
+            // Previous month days
+            const prevMonthLastDay = new Date(year, month, 0).getDate();
+            for (let i = startingDay - 1; i >= 0; i--) {
+                const dayNum = prevMonthLastDay - i;
+                grid.innerHTML += `<div class="calendar-day other-month"><div class="day-number">${dayNum}</div></div>`;
+            }
+
+            // Current month days
+            const today = new Date();
+            for (let day = 1; day <= totalDays; day++) {
+                const dateKey = formatDateKey(year, month, day);
+                const dayData = data[dateKey] || { hours: 0, tips: 0 };
+                const isToday = today.getDate() === day && today.getMonth() === month && today.getFullYear() === year;
+                
+                let classes = 'calendar-day';
+                if (isToday) classes += ' today';
+                if (dayData.hours > 0 || dayData.tips > 0) classes += ' has-data';
+
+                let info = '';
+                if (dayData.hours > 0) {
+                    info += `${dayData.hours}ч`;
+                }
+                if (dayData.tips > 0) {
+                    if (info) info += ' | ';
+                    info += `${dayData.tips}₽`;
+                }
+
+                grid.innerHTML += `
+                    <div class="${classes}" onclick="openDayModal(${year}, ${month}, ${day})">
+                        <div class="day-number">${day}</div>
+                        <div class="day-info">${info}</div>
+                    </div>
+                `;
+            }
+
+            // Next month days
+            const remainingCells = 42 - (startingDay + totalDays);
+            for (let day = 1; day <= remainingCells; day++) {
+                grid.innerHTML += `<div class="calendar-day other-month"><div class="day-number">${day}</div></div>`;
+            }
+        }
+
+        function formatDateKey(year, month, day) {
+            return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        }
+
+        function previousMonth() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        }
+
+        function nextMonth() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        }
+
+        function openDayModal(year, month, day) {
+            selectedDate = formatDateKey(year, month, day);
+            const dateObj = new Date(year, month, day);
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            
+            document.getElementById('modalDate').textContent = dateObj.toLocaleDateString('ru-RU', options);
+            
+            const dayData = data[selectedDate] || { hours: 0, tips: 0 };
+            document.getElementById('workHours').value = dayData.hours || '';
+            document.getElementById('tips').value = dayData.tips || '';
+            
+            document.getElementById('dayModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('dayModal').classList.remove('active');
+            selectedDate = null;
+        }
+
+        function saveDayData() {
+            const hours = parseFloat(document.getElementById('workHours').value) || 0;
+            const tips = parseFloat(document.getElementById('tips').value) || 0;
+            
+            if (hours === 0 && tips === 0) {
+                delete data[selectedDate];
+            } else {
+                data[selectedDate] = { hours, tips };
+            }
+            
+            localStorage.setItem('earningsData', JSON.stringify(data));
+            closeModal();
+            renderCalendar();
+            calculateTotals();
+        }
+
+        function deleteDayData() {
+            if (selectedDate && data[selectedDate]) {
+                delete data[selectedDate];
+                localStorage.setItem('earningsData', JSON.stringify(data));
+                closeModal();
+                renderCalendar();
+                calculateTotals();
+            }
+        }
+
+        function calculateTotals() {
+            const period = getPeriod();
+            let totalHours = 0;
+            let totalTips = 0;
+
+            for (const [dateKey, dayData] of Object.entries(data)) {
+                const date = new Date(dateKey);
+                if (date >= period.start && date <= period.end) {
+                    totalHours += dayData.hours || 0;
+                    totalTips += dayData.tips || 0;
+                }
+            }
+
+            const workEarnings = totalHours * hourlyRate;
+            const totalEarnings = workEarnings + totalTips;
+
+            document.getElementById('totalHours').textContent = totalHours.toFixed(1);
+            document.getElementById('workEarnings').textContent = `${workEarnings.toLocaleString()} ₽`;
+            document.getElementById('totalTips').textContent = `${totalTips.toLocaleString()} ₽`;
+            document.getElementById('totalEarnings').textContent = `${totalEarnings.toLocaleString()} ₽`;
+        }
+
+        // Close modal on outside click
+        document.getElementById('dayModal').addEventListener('click', (e) => {
+            if (e.target.id === 'dayModal') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
